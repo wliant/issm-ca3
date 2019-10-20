@@ -1,7 +1,7 @@
 import os
 import datetime
 import random
-import pandas
+import pandas as pd 
 data_folder = os.path.join("geolife-trajectory-1.3", "Data")
 
 class User:
@@ -51,11 +51,4 @@ class Dataloader:
                 self.points += u.data
                 
     def getDataFrames(self):
-        
-dl = Dataloader(load_portion=0.05)
-#users = []                    
-#for user_folder in os.listdir(data_folder):
-    #print(user_folder)
-#    users.append(User(os.path.join(data_folder, user_folder)))
-    
-#print("load complete")
+        return pd.DataFrame(self.points), pd.DataFrame(self.labels)
