@@ -16,8 +16,6 @@ def calculate_speed(current, next):
         time = 1
     if time > THRESHOLD:
         return 0
-    #print("{0} {1} {2}".format(current["timestamp"], next["timestamp"], next["timestamp"]-current["timestamp"]))
-    #print("{0} {1}".format(distance, time))
     return d /time
 def calculate_acceleration(current, next):
     if next is None:
@@ -49,9 +47,21 @@ def calculate_bearing(current, next):
         time = 1
     if time > THRESHOLD:
         return 0
-    xx = np.cos(current["latitude"] * np.pi/180) * np.sin(next["latitude"] * np.pi/180) - np.sin(current["latitude"] * np.pi/180) * np.cos(next["latitude"] * np.pi/180) * np.cos((next["longitude"] - current["longitude"]) * np.pi/180)
-    yy = np.sin(next["longitude"] - current["latitude"] * np.pi/180) * np.cos(next["latitude"] * np.pi/180)
-    return np.arctan2(yy,xx) * 180/np.pi
+    X = np.cos(next["latitude"]) * np.sin(next["longitude"]-current["longitude"])
+    Y = np.cos(current["latitude"]) * np.sin(next["latitude"]) - np.sin(current["latitude"]) * np.cos(next["latitude"]) * np.cos(next["longitude"] - current["longitude"])
+    return np.arctan2(X,Y) * 180/np.pi
+
+def calculate_bearing_rate(current, next):
+    if next is None:
+        return 0
+    time = (next["day_since"]-current["day_since"]) * 24 * 3600
+    if time <= 0:
+        time = 1
+    if time > THRESHOLD:
+        return 0
+    diff = next["bearing"] - current["bearing"]
+    return diff / time
+
 def preprocess(data_points):
     data_points.sort(key=lambda x: x["timestamp"])
     for i in range(0, len(data_points)):
@@ -71,7 +81,88 @@ def preprocess(data_points):
         j = i+1
         next = data_points[j] if j < len(data_points) else None
         data_points[i]["bearing"] = calculate_bearing(data_points[i], next)
+    for i in range(0, len(data_points)):
+        j = i+1
+        next = data_points[j] if j < len(data_points) else None
+        data_points[i]["bearing_rate"] = calculate_bearing_rate(data_points[i], next)
     return data_points
+
+def get_trajectory(points, labels):
+    result = []
+    for l in labels:
+        start = l["start_time"]
+        end = l["end_time"]
+        val = l["label"]
+        df = pd.DataFrame(list(filter(lambda x : x["timestamp"] >= start and  x["timestamp"] <= end, points)))
+
+        if len(df) ==0:
+            continue
+        r = df[["speed"]]
+        speed_min = np.min(r)["speed"]
+        speed_max = np.max(r)["speed"]
+        speed_mean = np.mean(r)["speed"]
+        speed_median = np.median(r)
+        speed_std = np.std(r)["speed"]
+        r = df[["acceleration"]]
+        acceleration_min = np.min(r)["acceleration"]
+        acceleration_max = np.max(r)["acceleration"]
+        acceleration_mean = np.mean(r)["acceleration"]
+        acceleration_median = np.median(r)
+        acceleration_std = np.std(r)["acceleration"]
+        r = df[["jerk"]]
+        jerk_min = np.min(r)["jerk"]
+        jerk_max = np.max(r)["jerk"]
+        jerk_mean = np.mean(r)["jerk"]
+        jerk_median = np.median(r)
+        jerk_std = np.std(r)["jerk"]
+        r = df[["bearing"]]
+        bearing_min = np.min(r)["bearing"]
+        bearing_max = np.max(r)["bearing"]
+        bearing_mean = np.mean(r)["bearing"]
+        bearing_median = np.median(r)
+        bearing_std = np.std(r)["bearing"]
+        r = df[["bearing_rate"]]
+        bearing_rate_min = np.min(r)["bearing_rate"]
+        bearing_rate_max = np.max(r)["bearing_rate"]
+        bearing_rate_mean = np.mean(r)["bearing_rate"]
+        bearing_rate_median = np.median(r)
+        bearing_rate_std = np.std(r)["bearing_rate"]
+        result.append({
+            "label": val, 
+            "start_time": start, 
+            "end_time": end, 
+            "speed_min": speed_min,
+            "speed_max": speed_max,
+            "speed_mean": speed_mean,
+            "speed_median": speed_median,
+            "speed_std": speed_std,
+            "acceleration_min": acceleration_min,
+            "acceleration_max": acceleration_max,
+            "acceleration_mean": acceleration_mean,
+            "acceleration_median": acceleration_median,
+            "acceleration_std": acceleration_std,
+            "jerk_min": jerk_min,
+            "jerk_max": jerk_max,
+            "jerk_mean": jerk_mean,
+            "jerk_median": jerk_median,
+            "jerk_std": jerk_std,
+            "bearing_min": bearing_min,
+            "bearing_max": bearing_max,
+            "bearing_mean": bearing_mean,
+            "bearing_median": bearing_median,
+            "bearing_std": bearing_std,
+            "bearing_rate_min": bearing_rate_min,
+            "bearing_rate_max": bearing_rate_max,
+            "bearing_rate_mean": bearing_rate_mean,
+            "bearing_rate_median": bearing_rate_median,
+            "bearing_rate_std": bearing_rate_std
+        })
+            #"points": r})
+    return result
+
+def get_traj_features(traj):
+    pass
+
 
 class User:
     def __init__(self, name, path):
@@ -112,15 +203,25 @@ class Dataloader:
         random.seed(seed)
         self.labels = []
         self.points = []
+        self.traj = []
         for user_folder in os.listdir(data_dir):
             gen = random.uniform(0, 1)
             if gen <= load_portion:
                 u = User(user_folder, os.path.join(data_dir, user_folder))
-                self.labels += u.labels
-                self.points += preprocess(u.data)
+                l = u.labels
+                p = preprocess(u.data)
+                if len(l) == 0:
+                    t = []
+                else:
+                    t = get_trajectory(p, l)
+                self.labels += l
+                self.points += p
+                self.traj += t
 
     def getDataFrames(self):
-        return pd.DataFrame(self.points), pd.DataFrame(self.labels)
+        return pd.DataFrame(self.points), pd.DataFrame(self.labels), pd.DataFrame(self.traj)
 
-points, labels = Dataloader(load_portion=0.02).getDataFrames()
-print(points)
+#points, labels, traj = Dataloader(load_portion=0.02).getDataFrames()
+#print(points)
+#print(labels)
+#print(traj)
