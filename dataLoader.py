@@ -230,8 +230,6 @@ class Dataloader:
     def getValidate(self):
         return ([],[])
     
-
-#points, labels, traj = Dataloader(load_portion=0.02).getDataFrames()
-#print(points)
-#print(labels)
-#print(traj)
+#data, lbl = Dataloader().getTrain()
+#data, lbl = Dataloader().getTest()
+#data, lbl = Dataloader().getValidate()

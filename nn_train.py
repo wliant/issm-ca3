@@ -57,6 +57,7 @@ print(traj)
 enc = OneHotEncoder(categories=[classes], handle_unknown='ignore')
 tofit = traj[['label']]
 labels = enc.fit_transform(tofit).toarray()
+print(labels.shape)
 
 traj.pop("label")
 traj.pop("start_time")
