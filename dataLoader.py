@@ -184,6 +184,7 @@ class User:
         self.data = []
         traj_path = os.path.join(self.path, "Trajectory")
         for data_file in os.listdir(traj_path):
+            print("processing {0}".format(data_file))
             full_data_file = os.path.join(traj_path, data_file)
             with open(full_data_file, 'r') as infile:
                 for line in infile:
@@ -207,6 +208,7 @@ class Dataloader:
         for user_folder in os.listdir(data_dir):
             gen = random.uniform(0, 1)
             if gen <= load_portion:
+                print("loading {0}/{1}".format(data_dir, user_folder))
                 u = User(user_folder, os.path.join(data_dir, user_folder))
                 l = u.labels
                 p = preprocess(u.data)

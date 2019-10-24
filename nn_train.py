@@ -49,13 +49,15 @@ seed = 7
 np.random.seed(seed)
 
 # .............................................................................
-_, _, traj = Dataloader(load_portion=0.02).getDataFrames()
+_, _, traj = Dataloader(load_portion=0.03).getDataFrames()
+print(traj)
 #https://www.tensorflow.org/tutorials/load_data/pandas_dataframe
-onehotencoder = OneHotEncoder(categories=[classes])
-labels = onehotencoder.fit(traj["label"])
-datagen = ImageDataGenerator()
-train_it = datagen.flow_from_directory(train_folder, shuffle=True, target_size=(IMG_SIZE,IMG_SIZE), class_mode='categorical', batch_size=batch_size)
-val_it = datagen.flow_from_directory(val_folder, shuffle=True, target_size=(IMG_SIZE,IMG_SIZE), class_mode='categorical', batch_size=batch_size)
+enc = OneHotEncoder(categories=[classes], handle_unknown='ignore')
+tofit = traj[['label']]
+labels = enc.fit_transform(tofit).toarray()
+
+traj.pop("label")
+dataset = tf.data.Dataset.from_tensor_slices((traj.values, labels))
 
 filepath        = os.path.join(output_folder, modelname + ".hdf5")
 checkpoint      = ModelCheckpoint(filepath, 
@@ -104,4 +106,5 @@ plot_model(model,
            show_layer_names=False,
            rankdir='TB')
 # fit model
-model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
+#model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
+model.fit(train_dataset, epochs=15)
