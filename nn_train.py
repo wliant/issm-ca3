@@ -76,6 +76,17 @@ csv_logger      = CSVLogger(os.path.join(output_folder, modelname +'.csv'))
 callbacks_list  = [checkpoint,csv_logger]
 
 #---- model creation code
+def get_compiled_model():
+  model = tf.keras.Sequential([
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(len(classes), activation='softmax')
+  ])
+
+  model.compile(optimizer='adam',
+                loss='categorical_crossentropy',
+                metrics=['accuracy'])
+  return model
 def createModel():
     i = Input(shape=(IMG_SIZE,IMG_SIZE,3))
     layer = Conv2D(32, kernel_size = (3,3), activation='relu')(i)
@@ -96,14 +107,22 @@ def createModel():
     layer = Dropout(0.2)(layer)
     layer = Flatten()(layer)
     layer = Dense(128, activation='relu')(layer)
+    layer = Dense(128, activation='relu')(layer)
+    layer = Dense(128, activation='relu')(layer)
     layer = Dense(len(classes), activation = 'softmax')(layer)
     model = Model(inputs=i, outputs=layer)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
   
   # define model
-model = createModel()
-model.summary()
+#model = createModel()
+model = get_compiled_model()
+#model.summary()
+
+# fit model
+#model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
+model.fit(dataset, epochs=15)
+
 from tensorflow.keras.utils import plot_model
 model_file = os.path.join(output_folder, modelname + "_model.png")
 plot_model(model, 
@@ -111,6 +130,3 @@ plot_model(model,
            show_shapes=True, 
            show_layer_names=False,
            rankdir='TB')
-# fit model
-#model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
-model.fit(train_dataset, epochs=15)

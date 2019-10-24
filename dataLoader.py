@@ -223,6 +223,14 @@ class Dataloader:
     def getDataFrames(self):
         return pd.DataFrame(self.points), pd.DataFrame(self.labels), pd.DataFrame(self.traj)
 
+    def getTrain(self):
+        return ([],[])
+    def getTest(self):
+        return ([],[])
+    def getValidate(self):
+        return ([],[])
+    
+
 #points, labels, traj = Dataloader(load_portion=0.02).getDataFrames()
 #print(points)
 #print(labels)
