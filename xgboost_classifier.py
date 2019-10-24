@@ -12,7 +12,8 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.model_selection import RandomizedSearchCV,GridSearchCV,ShuffleSplit,train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn import preprocessing
-
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 xgb_base_model = xgb.XGBClassifier(random_state = 8)
 
@@ -35,19 +36,24 @@ category_codes = {
     'motorcycle': 10
 }
 
+
 #_, _, traj = Dataloader(load_portion=0.03).getDataFrames()
 #print(traj)
 
 traj=pd.read_excel("traj.xlsx")
 
-traj = traj.replace({'labels':category_codes})
+traj['label_code']=traj['label']
+traj.replace({'label_code':category_codes})
 
-labels = traj[['label']]
-del traj['label']
-del traj['start_time']
-del traj['end_time']
+labels = traj[['label_code']]
+dup = traj.copy()
+del dup['label']
+del dup['start_time']
+del dup['end_time']
+del dup['label_code']
 
-X_train, X_test, y_train, y_test = train_test_split(traj,labels,test_size = 0.2, random_state = 0)
+
+X_train, X_test, y_train, y_test = train_test_split(dup,labels,test_size = 0.2, random_state = 0)
 
 print(X_train.shape)
 print(y_train.shape)
@@ -150,3 +156,55 @@ grid_search = GridSearchCV(estimator=gbc,
 
 # Fit the grid search to the data
 grid_search.fit(X_train, y_train)
+
+
+print("The best hyperparameters from Grid Search are:")
+print(grid_search.best_params_)
+print("")
+print("The mean accuracy of a model with these hyperparameters is:")
+print(grid_search.best_score_)
+
+best_gbc = grid_search.best_estimator_
+
+best_gbc
+
+## Model fit and performance
+
+best_gbc.fit(X_train, y_train)
+
+gbc_pred = best_gbc.predict(X_test)
+
+# Training accuracy
+print("The training accuracy is: ")
+print(accuracy_score(y_train, best_gbc.predict(X_train)))
+
+# Test accuracy
+print("The test accuracy is: ")
+print(accuracy_score(y_test, gbc_pred))
+
+
+# Classification report
+print("Classification report")
+print(classification_report(y_test,gbc_pred))
+
+aux_df = traj[['label','label_code']].drop_duplicates().sort_values('label_code')
+
+print(aux_df)
+conf_matrix = confusion_matrix(y_test, gbc_pred)
+plt.figure(figsize=(12.8,6))
+sns.heatmap(conf_matrix, 
+            annot=True,
+            xticklabels=aux_df['label'].values, 
+            yticklabels=aux_df['label'].values,
+            cmap="Blues")
+plt.ylabel('Predicted')
+plt.xlabel('Actual')
+plt.title('Confusion matrix')
+plt.show()
+
+base_model = xgb.XGBClassifier(random_state = 8)
+base_model.fit(X_train, y_train)
+accuracy_score(y_test, base_model.predict(X_test))
+
+best_gbc.fit(X_train, y_train)
+accuracy_score(y_test, best_gbc.predict(X_test))
