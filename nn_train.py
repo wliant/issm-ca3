@@ -25,6 +25,8 @@ from tensorflow.keras import optimizers
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array, load_img
 from tensorflow.keras.models import Sequential
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import tensorflow as tf
+import pandas as pd
 import os
 from dataLoader import Dataloader
 
@@ -57,7 +59,11 @@ tofit = traj[['label']]
 labels = enc.fit_transform(tofit).toarray()
 
 traj.pop("label")
-dataset = tf.data.Dataset.from_tensor_slices((traj.values, labels))
+traj.pop("start_time")
+traj.pop("end_time")
+dat = tf.convert_to_tensor(traj.values)
+lbl = tf.convert_to_tensor(pd.DataFrame(labels).values)
+dataset = tf.data.Dataset.from_tensor_slices((dat, lbl))
 
 filepath        = os.path.join(output_folder, modelname + ".hdf5")
 checkpoint      = ModelCheckpoint(filepath, 
