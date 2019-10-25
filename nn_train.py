@@ -118,12 +118,7 @@ def createModel():
   # define model
 #model = createModel()
 model = get_compiled_model()
-#model.summary()
-
-# fit model
-#model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
-model.fit(dataset, epochs=15)
-
+model.summary()
 from tensorflow.keras.utils import plot_model
 model_file = os.path.join(output_folder, modelname + "_model.png")
 plot_model(model, 
@@ -131,3 +126,7 @@ plot_model(model,
            show_shapes=True, 
            show_layer_names=False,
            rankdir='TB')
+# fit model
+#model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
+model.fit(dataset, epochs=15)
+
