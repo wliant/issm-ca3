@@ -29,6 +29,7 @@ import tensorflow as tf
 import pandas as pd
 import os
 from dataLoader import Dataloader
+from tensorflow.keras.utils import to_categorical
 
 output_folder = 'output'
 classes = ["walk", "bike", "bus", "car", "subway", "train", "airplane", "boat", "run", "motorcycle"]
@@ -51,19 +52,20 @@ seed = 7
 np.random.seed(seed)
 
 # .............................................................................
-_, _, traj = Dataloader(load_portion=0.03).getDataFrames()
-print(traj)
-#https://www.tensorflow.org/tutorials/load_data/pandas_dataframe
-enc = OneHotEncoder(categories=[classes], handle_unknown='ignore')
-tofit = traj[['label']]
-labels = enc.fit_transform(tofit).toarray()
-print(labels.shape)
-
-traj.pop("label")
-traj.pop("start_time")
-traj.pop("end_time")
-dat = tf.convert_to_tensor(traj.values)
-lbl = tf.convert_to_tensor(pd.DataFrame(labels).values)
+dl = Dataloader()
+x_train, y_train = dl.getTrain()
+x_test, y_test = dl.getTest()
+print(y_train)
+#enc = OneHotEncoder(categories=[classes],handle_unknown='ignore',drop=[0])
+y_train = to_categorical(y_train)
+y_test = to_categorical(y_test)
+x_train.pop("start_time")
+x_test.pop("start_time")
+x_train.pop("end_time")
+x_test.pop("end_time")
+dat = tf.convert_to_tensor(x_train)
+print(dat.shape)
+lbl = tf.convert_to_tensor(y_train)
 dataset = tf.data.Dataset.from_tensor_slices((dat, lbl))
 
 filepath        = os.path.join(output_folder, modelname + ".hdf5")
@@ -76,38 +78,20 @@ checkpoint      = ModelCheckpoint(filepath,
 csv_logger      = CSVLogger(os.path.join(output_folder, modelname +'.csv'))
 callbacks_list  = [checkpoint,csv_logger]
 
-#---- model creation code
-def get_compiled_model():
-  model = tf.keras.Sequential([
-    tf.keras.layers.Dense(32, activation='relu'),
-    tf.keras.layers.Dense(32, activation='relu'),
-    tf.keras.layers.Dense(len(classes), activation='softmax')
-  ])
 
-  model.compile(optimizer='adam',
-                loss='categorical_crossentropy',
-                metrics=['accuracy'])
-  return model
 def createModel():
-    i = Input(shape=(IMG_SIZE,IMG_SIZE,3))
-    layer = Conv2D(32, kernel_size = (3,3), activation='relu')(i)
-    layer = MaxPooling2D(pool_size=(2,2))(layer)
+    i = Input(shape=(24,1))
+    layer = Conv1D(32, kernel_size = 3, activation='relu')(i)
+    layer = MaxPooling1D(pool_size=2)(layer)
     layer = BatchNormalization()(layer)
-    layer = Conv2D(64, kernel_size=(3,3), activation='relu')(layer)
-    layer = MaxPooling2D(pool_size=(2,2))(layer)
+    layer = Conv1D(64, kernel_size = 3, activation='relu')(i)
+    layer = MaxPooling1D(pool_size=2)(layer)
     layer = BatchNormalization()(layer)
-    layer = Conv2D(64, kernel_size=(3,3), activation='relu')(layer)
-    layer = MaxPooling2D(pool_size=(2,2))(layer)
-    layer = BatchNormalization()(layer)
-    layer = Conv2D(96, kernel_size=(3,3), activation='relu')(layer)
-    layer = MaxPooling2D(pool_size=(2,2))(layer)
-    layer = BatchNormalization()(layer)
-    layer = Conv2D(32, kernel_size=(3,3), activation='relu')(layer)
-    layer = MaxPooling2D(pool_size=(2,2))(layer)
+    layer = Conv1D(64, kernel_size = 3, activation='relu')(i)
+    layer = MaxPooling1D(pool_size=2)(layer)
     layer = BatchNormalization()(layer)
     layer = Dropout(0.2)(layer)
     layer = Flatten()(layer)
-    layer = Dense(128, activation='relu')(layer)
     layer = Dense(128, activation='relu')(layer)
     layer = Dense(128, activation='relu')(layer)
     layer = Dense(len(classes), activation = 'softmax')(layer)
@@ -117,7 +101,7 @@ def createModel():
   
   # define model
 #model = createModel()
-model = get_compiled_model()
+model = createModel()
 model.summary()
 from tensorflow.keras.utils import plot_model
 model_file = os.path.join(output_folder, modelname + "_model.png")
@@ -128,5 +112,5 @@ plot_model(model,
            rankdir='TB')
 # fit model
 #model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
-model.fit(dataset, epochs=15)
+model.fit(dataset, epochs=15, steps_per_epoch=5)
 
