@@ -54,6 +54,7 @@ np.random.seed(seed)
 # .............................................................................
 dl = Dataloader()
 x_train, y_train = dl.getTrain()
+
 x_test, y_test = dl.getTest()
 print(y_train)
 #enc = OneHotEncoder(categories=[classes],handle_unknown='ignore',drop=[0])
@@ -63,10 +64,14 @@ x_train.pop("start_time")
 x_test.pop("start_time")
 x_train.pop("end_time")
 x_test.pop("end_time")
+x_train = np.expand_dims(x_train,axis=0)
+y_train = np.expand_dims(y_train,axis=0)
+x_test = np.expand_dims(x_test,axis=0)
+y_test = np.expand_dims(y_test,axis=0)
 dat = tf.convert_to_tensor(x_train)
-print(dat.shape)
 lbl = tf.convert_to_tensor(y_train)
-dataset = tf.data.Dataset.from_tensor_slices((dat, lbl))
+ds = tf.data.Dataset.from_tensor_slices((dat, lbl))
+dataset = ds.shuffle(len(x_train)).batch(5)
 
 filepath        = os.path.join(output_folder, modelname + ".hdf5")
 checkpoint      = ModelCheckpoint(filepath, 
@@ -77,11 +82,9 @@ checkpoint      = ModelCheckpoint(filepath,
                             # Log the epoch detail into csv
 csv_logger      = CSVLogger(os.path.join(output_folder, modelname +'.csv'))
 callbacks_list  = [checkpoint,csv_logger]
-
-
 def createModel():
-    i = Input(shape=(24,1))
-    layer = Conv1D(32, kernel_size = 3, activation='relu')(i)
+    i = Input(shape=(None,24))
+    layer = Conv1D(32, kernel_size = 3, strides=1, activation='relu')(i)
     layer = MaxPooling1D(pool_size=2)(layer)
     layer = BatchNormalization()(layer)
     layer = Conv1D(64, kernel_size = 3, activation='relu')(i)
@@ -91,7 +94,6 @@ def createModel():
     layer = MaxPooling1D(pool_size=2)(layer)
     layer = BatchNormalization()(layer)
     layer = Dropout(0.2)(layer)
-    layer = Flatten()(layer)
     layer = Dense(128, activation='relu')(layer)
     layer = Dense(128, activation='relu')(layer)
     layer = Dense(len(classes), activation = 'softmax')(layer)
