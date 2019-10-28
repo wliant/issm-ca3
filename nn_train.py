@@ -73,7 +73,7 @@ print(y_train.shape)
 dat = tf.convert_to_tensor(x_train)
 lbl = tf.convert_to_tensor(y_train)
 ds = tf.data.Dataset.from_tensor_slices((dat, lbl))
-dataset = ds.batch(1)
+dataset = ds.shuffle(1000).batch(1)
 
 filepath        = os.path.join(output_folder, modelname + ".hdf5")
 checkpoint      = ModelCheckpoint(filepath, 
@@ -116,5 +116,5 @@ plot_model(model,
            rankdir='TB')
 # fit model
 #model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
-model.fit(dataset, epochs=15, steps_per_epoch=1)
+model.fit(dataset, epochs=25, steps_per_epoch=int(len(x_train)/32), batch_size=32)
 
