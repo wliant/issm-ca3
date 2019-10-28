@@ -12,10 +12,19 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn.model_selection import RandomizedSearchCV,GridSearchCV,ShuffleSplit,train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn import preprocessing
+from dataLoader import Dataloader
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 xgb_base_model = xgb.XGBClassifier(random_state = 8)
+
+dl = Dataloader()
+X_train, y_train = dl.getTrain()
+
+X_test, y_test = dl.getTest()
+
+X_train.head()
 
 print('Parameters currently in use:\n')
 print(xgb_base_model.get_params())
@@ -35,25 +44,6 @@ category_codes = {
     'run': 9,
     'motorcycle': 10
 }
-
-
-#_, _, traj = Dataloader(load_portion=0.03).getDataFrames()
-#print(traj)
-
-traj=pd.read_excel("traj.xlsx")
-
-traj['label_code']=traj['label']
-traj.replace({'label_code':category_codes})
-
-labels = traj[['label_code']]
-dup = traj.copy()
-del dup['label']
-del dup['start_time']
-del dup['end_time']
-del dup['label_code']
-
-
-X_train, X_test, y_train, y_test = train_test_split(dup,labels,test_size = 0.2, random_state = 0)
 
 print(X_train.shape)
 print(y_train.shape)
