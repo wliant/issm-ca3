@@ -8,60 +8,71 @@ import csv
 
 THRESHOLD = 30
 
-def calculate_speed(current, next):
+def calculate_speed(current, next, prev_value):
     print("{0} {1}".format(current, next))
     if next is None:
-        return 0
+        return prev_value
     d = distance.distance((current["latitude"],current["longitude"]),(next["latitude"],next["longitude"])).km * 1000
     time = (next["day_since"]-current["day_since"]) * 24 * 3600
     if time <= 0:
         time = 1
     if time > THRESHOLD:
-        return 0
+        return prev_value
     return d /time
-def calculate_acceleration(current, next):
+def calculate_acceleration(current, next, prev_value):
     if next is None:
-        return 0
+        return prev_value
     speed_diff = next["speed"] - current["speed"]
     time = (next["day_since"]-current["day_since"]) * 24 * 3600
     if time <= 0:
         time = 1
     if time > THRESHOLD:
-        return 0
+        return prev_value
     return speed_diff / time
 
-def calculate_jerk(current, next):
+def calculate_jerk(current, next, prev_value):
     if next is None:
-        return 0
+        return prev_value
     acc_diff = next["acceleration"] - current["acceleration"]
     time = (next["day_since"]-current["day_since"]) * 24 * 3600
     if time <= 0:
         time = 1
     if time > THRESHOLD:
-        return 0
+        return prev_value
     return acc_diff / time
 
-def calculate_bearing(current, next):
+def calculate_bearing(current, next, prev_value):
     if next is None:
-        return 0
+        return prev_value
     time = (next["day_since"]-current["day_since"]) * 24 * 3600
     if time <= 0:
         time = 1
     if time > THRESHOLD:
-        return 0
+        return prev_value
     X = np.cos(next["latitude"]) * np.sin(next["longitude"]-current["longitude"])
     Y = np.cos(current["latitude"]) * np.sin(next["latitude"]) - np.sin(current["latitude"]) * np.cos(next["latitude"]) * np.cos(next["longitude"] - current["longitude"])
     return np.arctan2(X,Y) * 180/np.pi
 
-def calculate_bearing_rate(current, next):
+def calculate_bearing_rate(current, next, prev_value):
     if next is None:
-        return 0
+        return prev_value
     time = (next["day_since"]-current["day_since"]) * 24 * 3600
     if time <= 0:
         time = 1
     if time > THRESHOLD:
-        return 0
+        return prev_value
     diff = next["bearing"] - current["bearing"]
+    return diff / time
+
+def calculate_bearing_rate_rate(current, next, prev_value):
+    if next is None:
+        return prev_value
+    time = (next["day_since"]-current["day_since"]) * 24 * 3600
+    if time <= 0:
+        time = 1
+    if time > THRESHOLD:
+        return prev_value
+    diff = next["bearing_rate"] - current["bearing_rate"]
     return diff / time
 
 def preprocess(data_points):
@@ -69,24 +80,34 @@ def preprocess(data_points):
     for i in range(0, len(data_points)):
         j = i+1
         next = data_points[j] if j < len(data_points) else None
-        data_points[i]["speed"] = calculate_speed(data_points[i], next)
+        prev_value =  0 if i == 0 else data_points[i-1]["speed"]
+        data_points[i]["speed"] = calculate_speed(data_points[i], next, prev_value)
 
     for i in range(0, len(data_points)):
         j = i+1
         next = data_points[j] if j < len(data_points) else None
-        data_points[i]["acceleration"] = calculate_acceleration(data_points[i], next)
+        prev_value =  0 if i == 0 else data_points[i-1]["acceleration"]
+        data_points[i]["acceleration"] = calculate_acceleration(data_points[i], next, prev_value)
     for i in range(0, len(data_points)):
         j = i+1
         next = data_points[j] if j < len(data_points) else None
-        data_points[i]["jerk"] = calculate_jerk(data_points[i], next)
+        prev_value =  0 if i == 0 else data_points[i-1]["jerk"]
+        data_points[i]["jerk"] = calculate_jerk(data_points[i], next, prev_value)
     for i in range(0, len(data_points)):
         j = i+1
         next = data_points[j] if j < len(data_points) else None
-        data_points[i]["bearing"] = calculate_bearing(data_points[i], next)
+        prev_value =  0 if i == 0 else data_points[i-1]["bearing"]
+        data_points[i]["bearing"] = calculate_bearing(data_points[i], next, prev_value)
     for i in range(0, len(data_points)):
         j = i+1
         next = data_points[j] if j < len(data_points) else None
-        data_points[i]["bearing_rate"] = calculate_bearing_rate(data_points[i], next)
+        prev_value =  0 if i == 0 else data_points[i-1]["bearing_rate"]
+        data_points[i]["bearing_rate"] = calculate_bearing_rate(data_points[i], next, prev_value)
+    for i in range(0, len(data_points)):
+        j = i+1
+        next = data_points[j] if j < len(data_points) else None
+        prev_value =  0 if i == 0 else data_points[i-1]["bearing_rate_rate"]
+        data_points[i]["bearing_rate_rate"] = calculate_bearing_rate_rate(data_points[i], next, prev_value)
     return data_points
 
 def get_trajectory(points, labels):
@@ -129,10 +150,16 @@ def get_trajectory(points, labels):
         bearing_rate_mean = np.mean(r)["bearing_rate"]
         bearing_rate_median = np.median(r)
         bearing_rate_std = np.std(r)["bearing_rate"]
+        r = df[["bearing_rate_rate"]]
+        bearing_rate_rate_min = np.min(r)["bearing_rate_rate"]
+        bearing_rate_rate_max = np.max(r)["bearing_rate_rate"]
+        bearing_rate_rate_mean = np.mean(r)["bearing_rate_rate"]
+        bearing_rate_rate_median = np.median(r)
+        bearing_rate_rate_std = np.std(r)["bearing_rate_rate"]
         result.append({
             "label": val, 
-            "start_time": start, 
-            "end_time": end, 
+            "start_time": start.timestamp(), 
+            "end_time": end.timestamp(), 
             "speed_min": speed_min,
             "speed_max": speed_max,
             "speed_mean": speed_mean,
@@ -157,7 +184,12 @@ def get_trajectory(points, labels):
             "bearing_rate_max": bearing_rate_max,
             "bearing_rate_mean": bearing_rate_mean,
             "bearing_rate_median": bearing_rate_median,
-            "bearing_rate_std": bearing_rate_std
+            "bearing_rate_std": bearing_rate_std,
+            "bearing_rate_rate_min": bearing_rate_min,
+            "bearing_rate_rate_max": bearing_rate_max,
+            "bearing_rate_rate_mean": bearing_rate_mean,
+            "bearing_rate_rate_median": bearing_rate_median,
+            "bearing_rate_rate_std": bearing_rate_std
         })
             #"points": r})
     return result
