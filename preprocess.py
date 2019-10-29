@@ -9,7 +9,6 @@ import csv
 THRESHOLD = 30
 
 def calculate_speed(current, next, prev_value):
-    print("{0} {1}".format(current, next))
     if next is None:
         return prev_value
     d = distance.distance((current["latitude"],current["longitude"]),(next["latitude"],next["longitude"])).km * 1000
