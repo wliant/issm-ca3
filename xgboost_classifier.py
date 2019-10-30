@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 #Load Data
-dl = Dataloader()
+dl = Dataloader(normalization=True, select_features=["speed_max", "speed_mean", "speed_median", "speed_std"])
+
 X_train, y_train = dl.getTrain()
 
 X_test, y_test = dl.getTest()
@@ -24,11 +25,15 @@ X_validate, y_validate = dl.getValidate()
 print(X_train.shape)
 print(y_train.shape)
 
-classes = dl.getClasses()
+classes = {
+            "walk":0,
+            "bike":1,
+            "bus":2,
+            "taxi/car": 3,
+            "subway/train":4
+        }
 
 inv_map = {v: k for k, v in classes.items()}
-
-print(classes)
 
 #Base Model
 xgb_base_model = xgb.XGBClassifier(random_state = 8)
@@ -39,9 +44,9 @@ print(xgb_base_model.get_params())
 
 
 ## Randomized Search Parameters
-n_estimators = [200, 800]
+n_estimators = [200, 500]
 max_features = ['auto', 'sqrt']
-max_depth = [10, 40]
+max_depth = [10, 50]
 min_samples_split = [10, 30, 50]
 min_samples_leaf = [1, 2, 4]
 learning_rate = [.1, .5]
@@ -74,7 +79,7 @@ print("The mean accuracy of a model with these hyperparameters is:")
 print(random_search.best_score_)
 
 ## Grid Search 
-max_depth = [5, 10, 15]
+max_depth = [5, 15]
 max_features = ['sqrt']
 min_samples_leaf = [2]
 min_samples_split = [50, 100]
