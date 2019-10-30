@@ -6,7 +6,7 @@ import numpy as np
 from geopy import distance
 import csv
 
-THRESHOLD = 30
+THRESHOLD = 9999999
 
 def calculate_speed(current, next, prev_value):
     if next is None:
@@ -157,6 +157,7 @@ def get_trajectory(points, labels):
         bearing_rate_rate_std = np.std(r)["bearing_rate_rate"]
         result.append({
             "label": val, 
+            "point_count": len(df.index),
             "start_time": start.timestamp(), 
             "end_time": end.timestamp(), 
             "speed_min": speed_min,

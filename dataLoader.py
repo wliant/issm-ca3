@@ -1,13 +1,16 @@
 import random
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn import preprocessing
 columns = [
             "label", 
+            "point_count",
             "start_time",
             "end_time",
             "speed_min",
             "speed_max",
             "speed_mean",
+            "speed_median",
             "speed_std",
             "acceleration_min",
             "acceleration_max",
@@ -35,8 +38,10 @@ columns = [
             "bearing_rate_rate_median",
             "bearing_rate_rate_std"
         ]
+
+
 class Dataloader:
-    def __init__(self):
+    def __init__(self, select_features=None, normalization=False):
         self.classes = {
             "walk":0,
             "bike":1,
@@ -52,13 +57,19 @@ class Dataloader:
         }
         data = pd.read_csv("traj.csv", index_col =False, header=None,
                 names=columns)
-        print("before filtering: {0}".format(data.shape))
+        if select_features is not None:
+            data = data[["label"] + select_features]
+        #print("before filtering: {0}".format(data.shape))
         #drop rows with label not walk, bike, bus, taxi, car, subway, train
         data = data[data['label'].map(lambda x: self.classes[x]) <=4]
-        print("after filtering: {0}".format(data.shape))
+
+        #print("after filtering: {0}".format(data.shape))
         self.Y = data["label"].map(lambda x: self.classes[x])
         data.pop("label")
+
         self.X = data
+        if normalization:
+            self.X = pd.DataFrame(preprocessing.MinMaxScaler().fit_transform(self.X.values))
         self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(self.X, self.Y, test_size=0.1)
         self.X_train, self.X_val, self.Y_train, self.Y_val = train_test_split(self.X_train, self.Y_train, test_size=0.1)
 
