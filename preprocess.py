@@ -238,6 +238,7 @@ class Dataloader:
         points_csv = "points.csv"
         traj_csv = "traj.csv"
         label_csv = "label.csv"
+
         for user_folder in os.listdir(data_dir):
             gen = random.uniform(0, 1)
             if gen <= load_portion:
@@ -249,18 +250,18 @@ class Dataloader:
                     t = []
                 else:
                     t = get_trajectory(p, l)
+
+                df = pd.DataFrame(p)
                 with open(points_csv, 'a', newline='') as outfile:
-                    writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_ALL)
-                    for r in p:
-                        writer.writerow(r)
+                    df.to_csv(outfile, index=False, header=False)
+
+                df = pd.DataFrame(t)
                 with open(traj_csv, 'a', newline='') as outfile:
-                    writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_ALL)
-                    for r in l:
-                        writer.writerow(r)
+                    df.to_csv(outfile, index=False, header=False)
+
+                df = pd.DataFrame(l)
                 with open(label_csv, 'a', newline='') as outfile:
-                    writer = csv.writer(outfile, delimiter=",", quoting=csv.QUOTE_ALL)
-                    for r in t:
-                        writer.writerow(r)
+                    df.to_csv(outfile, index=False, header=False)
 
 Dataloader(load_portion=1)
 #data, lbl = Dataloader().getTrain()
