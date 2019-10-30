@@ -95,8 +95,8 @@ def createModel():
     layer = BatchNormalization()(layer)
     layer = Dropout(0.2)(layer)
     layer = Flatten()(layer)
-    layer = Dense(32, activation='relu')(layer)
-    layer = Dense(16, activation='relu')(layer)
+    layer = Dense(128, activation='relu')(layer)
+    layer = Dense(64, activation='relu')(layer)
     layer = Dense(5, activation = 'softmax')(layer)
     model = Model(inputs=i, outputs=layer)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -116,10 +116,10 @@ plot_model(model,
 # fit model
 #model.fit_generator(train_it, validation_data=val_it,epochs=50,callbacks=callbacks_list)
 model.fit(dataset, 
-  epochs=100,
+  epochs=50,
   validation_data=dataset_val,
-  validation_steps=int(len(x_val)/32), 
-  steps_per_epoch=int(len(x_train)/32), 
+  validation_steps=len(x_val),
+  steps_per_epoch=len(x_train),
   batch_size=32,
   callbacks=callbacks_list)
 
