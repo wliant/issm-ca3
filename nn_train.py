@@ -85,7 +85,7 @@ checkpoint      = ModelCheckpoint(filepath,
 csv_logger      = CSVLogger(os.path.join(output_folder, modelname +'.csv'))
 callbacks_list  = [checkpoint,csv_logger]
 def createModel():
-    i = Input(shape=(24, 1))
+    i = Input(shape=(29, 1))
     layer = Conv1D(32, kernel_size = 3, strides=1, activation='relu',padding="same")(i)
     layer = MaxPooling1D(pool_size=2)(layer)
     layer = BatchNormalization()(layer)
@@ -98,7 +98,7 @@ def createModel():
     layer = Dropout(0.2)(layer)
     layer = Dense(128, activation='relu')(layer)
     layer = Dense(128, activation='relu')(layer)
-    layer = Dense(11, activation = 'softmax')(layer)
+    layer = Dense(5, activation = 'softmax')(layer)
     model = Model(inputs=i, outputs=layer)
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model

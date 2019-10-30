@@ -1,2 +1,5 @@
+__pycache__/*
+label.csv
+points.csv
+output/*
 geolife-trajectory-1.3/*
- __pycache__/*

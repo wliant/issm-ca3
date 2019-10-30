@@ -41,17 +41,21 @@ class Dataloader:
             "walk":0,
             "bike":1,
             "bus":2,
+            "taxi": 3,
             "car":3, 
             "subway":4, 
-            "train":5, 
+            "train":4, 
             "airplane":6, 
             "boat":7, 
             "run":8, 
-            "taxi": 9,
             "motorcycle":10
         }
         data = pd.read_csv("traj.csv", index_col =False, header=None,
                 names=columns)
+        print("before filtering: {0}".format(data.shape))
+        #drop rows with label not walk, bike, bus, taxi, car, subway, train
+        data = data[data['label'].map(lambda x: self.classes[x]) <=4]
+        print("after filtering: {0}".format(data.shape))
         self.Y = data["label"].map(lambda x: self.classes[x])
         data.pop("label")
         self.X = data
