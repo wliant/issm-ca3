@@ -52,7 +52,7 @@ seed = 7
 np.random.seed(seed)
 
 # .............................................................................
-dl = Dataloader(normalization=True)
+dl = Dataloader(normalization=True, noise_removal=True)
 x_train, y_train = dl.getTrain()
 x_val, y_val = dl.getValidate()
 
