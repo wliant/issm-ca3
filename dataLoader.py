@@ -28,7 +28,12 @@ columns = [
             "bearing_rate_max",
             "bearing_rate_mean",
             "bearing_rate_median",
-            "bearing_rate_std"
+            "bearing_rate_std",
+            "bearing_rate_rate_min",
+            "bearing_rate_rate_max",
+            "bearing_rate_rate_mean",
+            "bearing_rate_rate_median",
+            "bearing_rate_rate_std"
         ]
 class Dataloader:
     def __init__(self):
