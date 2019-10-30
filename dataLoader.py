@@ -73,6 +73,8 @@ class Dataloader:
         self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(self.X, self.Y, test_size=0.1)
         self.X_train, self.X_val, self.Y_train, self.Y_val = train_test_split(self.X_train, self.Y_train, test_size=0.1)
 
+    def getX(self):
+        return (self.X)
     def getTrain(self):
         return (self.X_train,self.Y_train)
     def getTest(self):
