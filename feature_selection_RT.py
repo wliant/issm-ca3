@@ -15,8 +15,8 @@ from sklearn.metrics import accuracy_score
 
 
 
-x_train,y_train = Dataloader(normalization=True, noise_removal=True).getTrain()
-x_test,y_test = Dataloader(normalization=True, noise_removal=True).getTest()
+x_train,y_train = Dataloader().getTrain()
+x_test,y_test = Dataloader().getTest()
 
 y_train = to_categorical(y_train)
 
