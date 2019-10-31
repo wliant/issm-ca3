@@ -7,18 +7,23 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from sklearn.model_selection import ShuffleSplit
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 from tensorflow.python.keras.utils import to_categorical
+
+
 from dataLoader import Dataloader
 
-x_train,y_train = Dataloader(noise_removal=True,normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTrain()
-x_test,y_test = Dataloader(noise_removal=True,normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTest()
+dl = Dataloader(noise_removal=True,normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"])
+x_train,y_train = dl.getTrain()
+x_test,y_test = dl.getTest()
+X_validate, y_validate = dl.getValidate()
+
 
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
 
 x_train = np.expand_dims(x_train,axis=2)
 x_test = np.expand_dims(x_test,axis=2)
-print(x_train.shape)
 print(x_train.shape)
 print(y_train.shape)
 
@@ -75,7 +80,7 @@ random_search = RandomizedSearchCV(estimator=rfc,
                                    random_state=8)
 
 # Fit the random search model
-random_search.fit(x_train, y_train)
+random_search.fit(X_validate, y_validate)
 
 print("The best hyperparameters from Random Search are:")
 print(random_search.best_params_)
@@ -114,7 +119,7 @@ grid_search = GridSearchCV(estimator=rfc,
                            verbose=1)
 
 # Fit the grid search to the data
-grid_search.fit(x_train, y_train)
+grid_search.fit(X_validate, y_validate)
 
 print("The best hyperparameters from Grid Search are:")
 print(grid_search.best_params_)
