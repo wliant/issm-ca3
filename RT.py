@@ -29,8 +29,10 @@ from tensorflow.python.keras.utils import to_categorical
 from dataLoader import Dataloader
 
 x_important_train,x_important_test = fsrt.getNewXData()
-x_train,y_train = Dataloader().getTrain()
-x_test,y_test = Dataloader().getTest()
+selected_features = fsrt.getSelectedFeature().values
+print(selected_features)
+x_train,y_train = Dataloader(normalization=True, noise_removal=True).getTrain()
+x_test,y_test = Dataloader(normalization=True, noise_removal=True).getTest()
 
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
@@ -42,6 +44,7 @@ y_test = to_categorical(y_test)
 x_important_train = np.expand_dims(x_important_train,axis=2)
 x_important_test = np.expand_dims(x_important_test,axis=2)
 print(x_important_train.shape)
+print(x_train.shape)
 print(y_train.shape)
 
 nsamples, nx, ny = x_important_train.shape

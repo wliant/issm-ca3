@@ -15,16 +15,10 @@ from sklearn.metrics import accuracy_score
 
 
 
-x_train,y_train = Dataloader().getTrain()
-x_test,y_test = Dataloader().getTest()
+x_train,y_train = Dataloader(normalization=True, noise_removal=True).getTrain()
+x_test,y_test = Dataloader(normalization=True, noise_removal=True).getTest()
 
 y_train = to_categorical(y_train)
-x_train.pop("start_time")
-x_train.pop("end_time")
-x_test.pop("start_time")
-x_test.pop("end_time")
-print(x_train)
-
 
 print(x_train.shape)
 print(y_train.shape)
