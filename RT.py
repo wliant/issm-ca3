@@ -1,15 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 29 18:57:46 2019
-
-@author: tangmeng
-"""
-
-
-import pickle
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from pprint import pprint
 from sklearn.model_selection import RandomizedSearchCV
@@ -18,23 +7,14 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from sklearn.model_selection import ShuffleSplit
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
-import tensorflow as tf
-
 from tensorflow.python.keras.utils import to_categorical
-
-
 from dataLoader import Dataloader
 
-x_train,y_train = Dataloader(normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTrain()
-x_test,y_test = Dataloader(normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTest()
+x_train,y_train = Dataloader(noise_removal=True,normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTrain()
+x_test,y_test = Dataloader(noise_removal=True,normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTest()
 
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
-#x_train.pop("start_time")
-#x_test.pop("start_time")
-#x_train.pop("end_time")
-#x_test.pop("end_time")
 
 x_train = np.expand_dims(x_train,axis=2)
 x_test = np.expand_dims(x_test,axis=2)
@@ -47,7 +27,6 @@ x_train = x_train.reshape((nsamples,nx*ny))
 
 nsamples, nx, ny = x_test.shape
 x_test = x_test.reshape((nsamples,nx*ny))
-
 
 rf_0 = RandomForestClassifier(random_state = 8)
 
@@ -158,8 +137,27 @@ print(accuracy_score(y_test, rfc_pred))
 print("Classification report")
 print(classification_report(y_test,rfc_pred))
 
+classes = {
+            "walk":0,
+            "bike":1,
+            "bus":2,
+            "taxi/car": 3,
+            "subway/train":4
+        }
 
+conf_matrix = confusion_matrix(y_test.argmax(axis=1), rfc_pred.argmax(axis=1))
+    
+print(conf_matrix)
 
-
-
-
+plt.figure(figsize=(12.8,8))
+ax = sns.heatmap(conf_matrix, 
+            annot=True,
+            xticklabels=classes, 
+            yticklabels=classes,
+            cmap='Greens',fmt = 'g')
+bottom, top = ax.get_ylim()
+ax.set_ylim(bottom + 0.5, top - 0.5)
+plt.ylabel('Predicted')
+plt.xlabel('Actual')
+plt.title('Confusion matrix')
+plt.show()
