@@ -153,7 +153,7 @@ rfc_pred = best_rfc.predict(x_important_test)
 
 # Training accuracy
 print("The training accuracy is: ")
-print(accuracy_score(x_important_train, best_rfc.predict(x_important_train)))
+print(accuracy_score(y_train, best_rfc.predict(x_important_train)))
 
 # Test accuracy
 print("The test accuracy is: ")
