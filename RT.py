@@ -31,8 +31,8 @@ from dataLoader import Dataloader
 x_important_train,x_important_test = fsrt.getNewXData()
 selected_features = fsrt.getSelectedFeature().values
 print(selected_features)
-x_train,y_train = Dataloader(normalization=True, noise_removal=True).getTrain()
-x_test,y_test = Dataloader(normalization=True, noise_removal=True).getTest()
+x_train,y_train = Dataloader(normalization=True).getTrain()
+x_test,y_test = Dataloader(normalization=True).getTest()
 
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
