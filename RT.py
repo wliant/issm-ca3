@@ -21,18 +21,13 @@ import seaborn as sns
 import pandas as pd
 import tensorflow as tf
 
-import feature_selection_RT as fsrt
-
 from tensorflow.python.keras.utils import to_categorical
 
 
 from dataLoader import Dataloader
 
-x_important_train,x_important_test = fsrt.getNewXData()
-selected_features = fsrt.getSelectedFeature().values
-print(selected_features)
-x_train,y_train = Dataloader(normalization=True).getTrain()
-x_test,y_test = Dataloader(normalization=True).getTest()
+x_train,y_train = Dataloader(normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTrain()
+x_test,y_test = Dataloader(normalization=True,select_features=["speed_max", "speed_mean", "speed_median", "speed_std"]).getTest()
 
 y_train = to_categorical(y_train)
 y_test = to_categorical(y_test)
@@ -41,17 +36,17 @@ y_test = to_categorical(y_test)
 #x_train.pop("end_time")
 #x_test.pop("end_time")
 
-x_important_train = np.expand_dims(x_important_train,axis=2)
-x_important_test = np.expand_dims(x_important_test,axis=2)
-print(x_important_train.shape)
+x_train = np.expand_dims(x_train,axis=2)
+x_test = np.expand_dims(x_test,axis=2)
+print(x_train.shape)
 print(x_train.shape)
 print(y_train.shape)
 
-nsamples, nx, ny = x_important_train.shape
-x_important_train = x_important_train.reshape((nsamples,nx*ny))
+nsamples, nx, ny = x_train.shape
+x_train = x_train.reshape((nsamples,nx*ny))
 
-nsamples, nx, ny = x_important_test.shape
-x_important_test = x_important_test.reshape((nsamples,nx*ny))
+nsamples, nx, ny = x_test.shape
+x_test = x_test.reshape((nsamples,nx*ny))
 
 
 rf_0 = RandomForestClassifier(random_state = 8)
@@ -101,7 +96,7 @@ random_search = RandomizedSearchCV(estimator=rfc,
                                    random_state=8)
 
 # Fit the random search model
-random_search.fit(x_important_train, y_train)
+random_search.fit(x_train, y_train)
 
 print("The best hyperparameters from Random Search are:")
 print(random_search.best_params_)
@@ -140,7 +135,7 @@ grid_search = GridSearchCV(estimator=rfc,
                            verbose=1)
 
 # Fit the grid search to the data
-grid_search.fit(x_important_train, y_train)
+grid_search.fit(x_train, y_train)
 
 print("The best hyperparameters from Grid Search are:")
 print(grid_search.best_params_)
@@ -148,12 +143,12 @@ print("The mean accuracy of a model with these hyperparameters is:")
 print(grid_search.best_score_)
 
 best_rfc = grid_search.best_estimator_
-best_rfc.fit(x_important_train, y_train)
-rfc_pred = best_rfc.predict(x_important_test)
+best_rfc.fit(x_train, y_train)
+rfc_pred = best_rfc.predict(x_test)
 
 # Training accuracy
 print("The training accuracy is: ")
-print(accuracy_score(y_train, best_rfc.predict(x_important_train)))
+print(accuracy_score(y_train, best_rfc.predict(x_train)))
 
 # Test accuracy
 print("The test accuracy is: ")
@@ -162,6 +157,8 @@ print(accuracy_score(y_test, rfc_pred))
 # Classification report
 print("Classification report")
 print(classification_report(y_test,rfc_pred))
+
+
 
 
 
